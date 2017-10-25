@@ -15,7 +15,9 @@ object BatchAnalysis {
     val tweets: RDD[String] = sc.textFile("1Mtweets_en.txt")
 
     //add your code here
-    val nb_tweets_trump = tweets.filter(tweet => tweet.contains("@realdonaldtrump"))
+    val search = "Donald Trump"
+//    val search = "@realdonaldtrump"
+    val nb_tweets_trump = tweets.filter(tweet => tweet.contains(search))
       .count()
     println("Mention @realdonaldtrump: " + nb_tweets_trump)
 
