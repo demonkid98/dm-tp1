@@ -52,14 +52,12 @@ object BatchAnalysis {
       .take(5)
       .foreach(println)
 
-    // TODO cache swapped
-    val bottom = subjectsSentiments.map(_.swap)
-        .takeOrdered(10)
+    val sentimentsSubjects = subjectsSentiments.map(_.swap).cache()
+    val bottom = sentimentsSubjects.takeOrdered(10)
     println("Bottom:")
     bottom.foreach(println)
 
-    val top = subjectsSentiments.map(_.swap)
-      .top(10)
+    val top = sentimentsSubjects.top(10)
     println("Top:")
     top.foreach(println)
   }
