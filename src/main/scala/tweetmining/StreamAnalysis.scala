@@ -49,27 +49,32 @@ object StreamAnalysis {
 //        .foreach(println)
 //    }
     
+    // output top 10 & bottom 10 hashtags/mentions by sentiments 
     tweetStream.foreachRDD { rdd =>
-      val hashTagRdd = rdd.map(consRecord => consRecord.value())
+      val tagsSentiments = rdd.map(consRecord => consRecord.value())
         .flatMap{ tweet =>
-          var list : List[(String, (Double, Double))] = List()
-          TweetUtilities.getHashTags(tweet).foreach { hashTag =>
-            list = list :+ (hashTag, (TweetUtilities.getSentiment(tweet), 1d))
-          }
-          list
+          val mentions = TweetUtilities.getMentions(tweet)
+            .map(mention => (mention, (TweetUtilities.getSentiment(tweet), 1d)))
+          val hashTags = TweetUtilities.getHashTags(tweet)
+            .map(hashTag => (hashTag, (TweetUtilities.getSentiment(tweet), 1d)))
+          mentions ++ hashTags
         }
-//        .reduceByKey((pair1, pair2) => (pair1._1 + pair2._1, pair1._2 + pair2._2)) // val: (sum, coun)
-//        .map(pair => (pair._1, pair._2._1 / pair._2._2)) // val: avg
- 
-      val mentionRdd = rdd.map(consRecord => consRecord.value())
-        .flatMap{ tweet =>
-          var list : List[(String, (Double, Double))] = List()
-          TweetUtilities.getMentions(tweet).foreach { hashTag =>
-            list = list :+ (hashTag, (TweetUtilities.getSentiment(tweet), 1d))
-          }
-          list
-        }
+        .reduceByKey((pair1, pair2) => (pair1._1 + pair2._1, pair1._2 + pair2._2)) // val: (sum, coun)
+        .map(pair => (pair._1, pair._2._1 / pair._2._2)) // val: avg
+        .map(_.swap)
+        .cache();
       
+      println(">> Bottom 10");
+      tagsSentiments.takeOrdered(10)
+        .map(_.swap)
+        .foreach(println);
+      
+      println(">> Top 10");
+      tagsSentiments.top(10)
+        .map(_.swap)
+        .foreach(println);
+
+
     }
 
     streamingContext.start()
